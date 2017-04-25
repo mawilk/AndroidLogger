@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="pl.edu.agh.loggerclient.MainActivity">
+
+    <RelativeLayout
+        android:layout_width="371dp"
+        android:layout_height="498dp"
+        tools:layout_editor_absoluteX="7dp"
+        tools:layout_editor_absoluteY="6dp">
+
+        <Button
+            android:id="@+id/main_button"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="213dp"
+            android:text="Start"
+            tools:layout_editor_absoluteX="146dp"
+            tools:layout_editor_absoluteY="310dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true" />
+
+        <TextView
+            android:id="@+id/intro"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp"
+            android:gravity="center"
+            android:text="Press start to send logs from your mobile to our awesome server!"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:visibility="visible"
+            android:layout_above="@+id/main_button"
+            android:layout_alignStart="@+id/main_button" />
+
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>
