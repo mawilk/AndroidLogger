@@ -1,8 +1,6 @@
 package pl.edu.agh.loggerclient;
 
-import android.app.AlarmManager;
 import android.app.IntentService;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
@@ -10,9 +8,6 @@ import android.util.Log;
 
 import java.io.*;
 import java.net.*;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 
 /**
  * Created by zivsegal on 4/3/14.
@@ -25,22 +20,18 @@ public class LoggerService extends IntentService{
         silent,
         active
     }
-    private static LogMod mode = LogMod.active;
+    private static LogMod mode = LogMod.silent;
 
     public static final String ACTION_LOG = "LOGGER_SERVICE_ACTION_LOG";
     public static final String ACTION_SET_MODE = "LOGGER_SERVICE_ACTION_SET_MODE";
-    public static final String ACTION_CLEANUP = "LOGGER_SERVICE_ACTION_CLEANUP"; // Set by an alarm for daily old log files cleanup
+    public static final String ACTION_FLUSH = "LOGGER_SERVICE_ACTION_FLUSH_MODE";
 
     public static final String EXTRA_LOG = "EXTRA_LOG";
     public static final String EXTRA_MODE = "EXTRA_MODE";
 
     private static final String LOGSTASH_SERVER_URL = "http://XXX.XXX.XXX.XXX"; // SET PROPER URL
     private static final int LOGSTASH_UDP_JSON_PORT = 5000;
-    private static final String LOGSTASH_FILE_PREFIX= "logstash_";
-    private static final int MAX_LOG_DAYS = 7;
-    private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-    private static final int DAY = 24*60*60*1000; // in milliseconds
+    private static final String LOGSTASH_FILE= "logstash_logs";
 
     public LoggerService() {
         super("LoggerService");
@@ -49,7 +40,6 @@ public class LoggerService extends IntentService{
     @Override
     public void onCreate() {
         super.onCreate();
-        setCleanupWakeAlarm(DAY);
     }
 
     /**
@@ -59,7 +49,7 @@ public class LoggerService extends IntentService{
      * @param context
      * @param log the log row to be written
      */
-    public static void writeToFile(Context context, String log) {
+    public static void addLog(Context context, String log) {
         Intent intent = new Intent(context, LoggerService.class);
         intent.setAction(ACTION_LOG);
         intent.putExtra(EXTRA_LOG, log);
@@ -78,6 +68,18 @@ public class LoggerService extends IntentService{
         Intent intent = new Intent(context, LoggerService.class);
         intent.setAction(ACTION_SET_MODE);
         intent.putExtra(EXTRA_MODE, newMode.ordinal());
+
+        context.startService(intent);
+    }
+
+    /**
+     * Start service to flush existing logfile.
+     * If the service is already performing a task this action will be queued.
+     * @param context
+     */
+    public static void flushLogs(Context context) {
+        Intent intent = new Intent(context, LoggerService.class);
+        intent.setAction(ACTION_FLUSH);
 
         context.startService(intent);
     }
@@ -103,12 +105,11 @@ public class LoggerService extends IntentService{
                     default:
                         break;
                 }
+            } else if (action.equalsIgnoreCase(ACTION_FLUSH)) {
+                flushLogToServer();
             } else if (action.equalsIgnoreCase(ACTION_SET_MODE)) {
                 int newMode = intent.getIntExtra(EXTRA_MODE, LogMod.silent.ordinal());
                 setLogMode(LogMod.values()[newMode]);
-            } else if (action.equalsIgnoreCase(ACTION_CLEANUP)) {
-                // delete old log file if needed. only keep 7 days of logs
-                deleteOldLogFile();
             }
         }
     }
@@ -131,6 +132,7 @@ public class LoggerService extends IntentService{
             Log.d(TAG, "couldn't send log:"+e.toString());
             return;
         }
+
         int msg_length = logStr.length();
         byte []message = logStr.getBytes();
         if (host != null) {
@@ -145,8 +147,7 @@ public class LoggerService extends IntentService{
     }
 
     private void writeLogToFile(String log) {
-        String dateStr = dateFormat.format(new Date());
-        String fileName = LOGSTASH_FILE_PREFIX + dateStr;
+        String fileName = LOGSTASH_FILE;
         BufferedWriter bw = null;
         try {
             FileOutputStream outputStream = openFileOutput(fileName, Context.MODE_APPEND);
@@ -175,39 +176,14 @@ public class LoggerService extends IntentService{
         this.mode = newMode;
         if (oldMode == LogMod.silent && newMode == LogMod.active) {
             // activating the logging, send all the accumulated logs
-            flushLogsToServer();
+            flushLogToServer();
         }
     }
 
-    private void deleteOldLogFile() {
-        // get the date of MAX_LOG_DAYS days ago
-        String dateStr = getDayString(-MAX_LOG_DAYS);
-
-        // delete the old (week ago) file
-        String fileName = LOGSTASH_FILE_PREFIX + dateStr;
+    private void flushLogToServer() {
+        String fileName = LOGSTASH_FILE;
+        sendLogFile(fileName);
         deleteFile(fileName);
-
-        // schedule the logs deletion to occur once a day
-        setCleanupWakeAlarm(DAY);
-    }
-
-    private String getDayString(int offset) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_YEAR, offset);
-        Date newDate = calendar.getTime();
-        String dateStr = dateFormat.format(newDate);
-        return dateStr;
-    }
-
-    private void flushLogsToServer() {
-        // send log file one by one (each log file is a day of logs)
-        for (int i=MAX_LOG_DAYS; i >= 0; i--) {
-            String dateStr = getDayString(-i);
-            String fileName = LOGSTASH_FILE_PREFIX + dateStr;
-            sendLogFile(fileName);
-            // delete the log file
-            deleteFile(fileName);
-        }
     }
 
     /**
@@ -215,11 +191,11 @@ public class LoggerService extends IntentService{
      * @param fileName log file name
      */
     private void sendLogFile(String fileName) {
-        FileInputStream fstream = null;
+        FileInputStream fstream;
         try {
             fstream = openFileInput(fileName);
         } catch (FileNotFoundException e) {
-            Log.d(TAG, "couldn't open log file"+e.toString());
+            Log.d(TAG, "couldn't open log file" + e.toString());
             return;
         }
         // Get the object of DataInputStream
@@ -231,21 +207,15 @@ public class LoggerService extends IntentService{
                 sendLogToServer(log);
             }
         } catch (IOException e) {
-            Log.d(TAG, "couldn't send log to server:"+e.toString());
+            Log.d(TAG, "couldn't send log to server:" + e.toString());
         } finally {
             try {
                 if (br != null) {
                     br.close();
                 }
             } catch (IOException e) {
-                Log.d(TAG, "Failed to close BufferedReader:"+e.toString());
+                Log.d(TAG, "Failed to close BufferedReader:" + e.toString());
             }
         }
-    }
-
-    private void setCleanupWakeAlarm(long interval) {
-        AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
-        alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + interval,
-                PendingIntent.getBroadcast(this, 0, new Intent(ACTION_CLEANUP), 0));
     }
 }
