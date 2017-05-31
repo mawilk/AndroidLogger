@@ -62,6 +62,7 @@ public class ConnectionService extends Service {
                 StringBuilder command = new StringBuilder("logcat");
                 if(params.length > 0) {
                     command.append(" -s ");
+                    command.append(" -v year ");
                     command.append(params[0]);
                 }
 

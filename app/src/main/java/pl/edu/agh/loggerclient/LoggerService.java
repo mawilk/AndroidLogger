@@ -29,7 +29,7 @@ public class LoggerService extends IntentService{
     public static final String EXTRA_LOG = "EXTRA_LOG";
     public static final String EXTRA_MODE = "EXTRA_MODE";
 
-    private static final String LOGSTASH_SERVER_URL = "http://XXX.XXX.XXX.XXX"; // SET PROPER URL
+    private static final String LOGSTASH_SERVER_URL = "http://192.168.0.182"; // SET PROPER URL
     private static final int LOGSTASH_UDP_JSON_PORT = 5000;
     private static final String LOGSTASH_FILE= "logstash_logs";
 
