@@ -23,10 +23,10 @@ public class MainActivity extends AppCompatActivity {
     private Button mainBtn;
     private boolean isStarted = false;
 
+    private Timer timer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d("MainActivity", "created");
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -42,19 +42,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Timer t = new Timer();
-        t.scheduleAtFixedRate(new FunnyTimer(), 0, 5 * 1000);
+        new Timer().scheduleAtFixedRate(new FunnyTimer(), 0, 5 * 1000);
     }
 
     private Handler h = new Handler();
+
     private class FunnyTimer extends TimerTask {
         private int counter = 0;
+
         @Override
         public void run() {
             h.post(new Runnable() {
                 @Override
                 public void run() {
-                    if(isStarted) {
+                    if (isStarted) {
                         counter += 1;
                         Log.d("FunnyLogs", String.valueOf(counter));
                     }
@@ -65,21 +66,22 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        Log.d("MainActivity", "started");
         super.onStart();
 
-        if(!bound) {
+        if (!bound) {
             Intent intent = new Intent(MainActivity.this, ConnectionService.class);
             this.bindService(intent, logicConnection, Context.BIND_AUTO_CREATE);
-            Log.d("MainActivity", "service binded");
+        }
+
+        if (isStarted) {
+            mainBtn.setText("Stop");
         }
     }
 
     @Override
     protected void onStop() {
-        Log.d("MainActivity", "service stopped");
         super.onStop();
-        if(bound) {
+        if (bound) {
             bound = false;
             this.unbindService(logicConnection);
         }
@@ -88,7 +90,6 @@ public class MainActivity extends AppCompatActivity {
     private ServiceConnection logicConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d("MainActivity", "service binded - connected");
             ConnectionService.ConnectionBinder binder = (ConnectionService.ConnectionBinder) service;
             connectionService = binder.getService();
             bound = true;
@@ -96,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            Log.d("MainActivity", "service binded - disconnected");
             connectionService = null;
             bound = false;
         }
@@ -105,12 +105,24 @@ public class MainActivity extends AppCompatActivity {
     private void start() {
         mainBtn.setText("Stop");
         isStarted = true;
-        connectionService.startLogging();
+
+        if (timer != null) {
+            timer.cancel();
+        }
+
+        timer = new Timer();
+        connectionService.startLogging(timer);
     }
 
     private void stop() {
         mainBtn.setText("Start");
         isStarted = false;
+
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+
         connectionService.stopLogging();
     }
 }

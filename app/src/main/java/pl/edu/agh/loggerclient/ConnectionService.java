@@ -20,10 +20,10 @@ import java.util.TimerTask;
 
 public class ConnectionService extends Service {
 
-    public static final long SEND_LOG_INTERVAL = 20 * 1000; //30s
+    public static final long SEND_LOG_INTERVAL = 20 * 1000;
+    public static final String TAG = "ConnectionService";
 
     private final IBinder binder = new ConnectionBinder();
-    private Timer sendingTimer;
     private boolean running = false;
 
     private Handler handler = new Handler();
@@ -45,7 +45,7 @@ public class ConnectionService extends Service {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d("ConnectionService", "Sending log");
+                    Log.d(TAG, "Sending log");
                     LoggerService.flushLogs(getBaseContext());
                 }
             });
@@ -57,9 +57,11 @@ public class ConnectionService extends Service {
         @Override
         protected Integer doInBackground(String[] params) {
             try {
-                Log.d("ConnectionService", "Starting log collection");
+                Log.d(TAG, "Starting log collection");
 
                 StringBuilder command = new StringBuilder("logcat");
+
+                command.append(" -v year ");
                 if(params.length > 0) {
                     command.append(" -s ");
                     command.append(params[0]);
@@ -73,12 +75,12 @@ public class ConnectionService extends Service {
                 running = true;
                 String line = "";
                 while ((line = bufferedReader.readLine()) != null && running) {
-                    Log.d("ConnectionService", line);
+                    Log.d(TAG, line);
                     LoggerService.addLog(getBaseContext(), line);
                 }
             }
             catch (IOException e) {
-                Log.d("ConnectionService", "Collecting logs failed.");
+                Log.d(TAG, "Collecting logs failed.");
                 this.cancel(true);
             }
 
@@ -86,21 +88,15 @@ public class ConnectionService extends Service {
         }
     }
 
-    public void startLogging() {
-        Log.d("ConnectionService", "Logging started");
+    public void startLogging(Timer timer) {
+        Log.d(TAG, "Logging started");
         new CollectLogTask().execute("FunnyLogs");
 
-        if(sendingTimer != null) {
-            sendingTimer.cancel();
-        }
-
-        sendingTimer = new Timer();
-        sendingTimer.scheduleAtFixedRate(new SendLogTask(), SEND_LOG_INTERVAL, SEND_LOG_INTERVAL);
+        timer.scheduleAtFixedRate(new SendLogTask(), SEND_LOG_INTERVAL, SEND_LOG_INTERVAL);
     }
 
     public void stopLogging() {
-        Log.d("ConnectionService", "Logging stopped");
+        Log.d(TAG, "Logging stopped");
         running = false;
-        sendingTimer.cancel();
     }
 }
