@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
@@ -12,10 +13,15 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
+
+    public static final String DATE_PATTERN = "MM-dd HH:mm:ss.S";
+    public static final String LAST_LOG_DATE_TAG = "LastLogDate";
 
     private ConnectionService connectionService;
     private boolean bound = false;
@@ -24,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean isStarted = false;
 
     private Timer timer;
+
+    SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        preferences = getPreferences(MODE_PRIVATE);
 
         new Timer().scheduleAtFixedRate(new FunnyTimer(), 0, 5 * 1000);
     }
@@ -73,9 +83,7 @@ public class MainActivity extends AppCompatActivity {
             this.bindService(intent, logicConnection, Context.BIND_AUTO_CREATE);
         }
 
-        if (isStarted) {
-            mainBtn.setText("Stop");
-        }
+        setButtonLabel();
     }
 
     @Override
@@ -103,26 +111,65 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void start() {
-        mainBtn.setText("Stop");
         isStarted = true;
+        setButtonLabel();
 
         if (timer != null) {
             timer.cancel();
         }
 
         timer = new Timer();
-        connectionService.startLogging(timer);
+
+        String lastLogDate = getLastSavedDateOrDefault();
+
+        connectionService.startLogging(timer, lastLogDate);
     }
 
     private void stop() {
-        mainBtn.setText("Start");
         isStarted = false;
+        setButtonLabel();
 
         if (timer != null) {
             timer.cancel();
             timer = null;
         }
 
+        saveCurrentDate();
+
         connectionService.stopLogging();
+    }
+
+    private void setButtonLabel() {
+        mainBtn.setText(getStateLabel());
+    }
+
+    private void saveCurrentDate() {
+        String current = getCurrentStringDate();
+        SharedPreferences.Editor edit = preferences.edit();
+        edit.putString(LAST_LOG_DATE_TAG, current);
+        edit.commit();
+    }
+
+    private String getLastSavedDateOrDefault() {
+        String LastLogDate = preferences.getString(LAST_LOG_DATE_TAG, "");
+
+        if(LastLogDate.isEmpty()) {
+            LastLogDate = getCurrentStringDate();
+        }
+
+        return LastLogDate;
+    }
+
+    private String getCurrentStringDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
+        return sdf.format(new Date());
+    }
+
+    private String getStateLabel() {
+        if (isStarted) {
+            return "Stop";
+        }
+
+        return "Start";
     }
 }

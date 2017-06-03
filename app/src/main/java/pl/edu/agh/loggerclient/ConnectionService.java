@@ -11,6 +11,8 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -54,19 +56,20 @@ public class ConnectionService extends Service {
 
     class CollectLogTask extends AsyncTask<String, Void, Integer> {
 
+        private String dateString;
+
+        public CollectLogTask(String date) {
+            this.dateString = date;
+        }
+
         @Override
         protected Integer doInBackground(String[] params) {
             try {
                 Log.d(TAG, "Starting log collection");
 
-                StringBuilder command = new StringBuilder("logcat");
+                String[] command = new String[]{"logcat", "-T", dateString, "-s", params[0]};
 
-                if(params.length > 0) {
-                    command.append(" -s ");
-                    command.append(params[0]);
-                }
-
-                Process process = Runtime.getRuntime().exec(command.toString());
+                Process process = Runtime.getRuntime().exec(command);
                 BufferedReader bufferedReader = new BufferedReader(
                         new InputStreamReader(process.getInputStream())
                 );
@@ -87,9 +90,10 @@ public class ConnectionService extends Service {
         }
     }
 
-    public void startLogging(Timer timer) {
+    public void startLogging(Timer timer, String dateString) {
         Log.d(TAG, "Logging started");
-        new CollectLogTask().execute("FunnyLogs");
+
+        new CollectLogTask(dateString).execute("FunnyLogs");
 
         timer.scheduleAtFixedRate(new SendLogTask(), SEND_LOG_INTERVAL, SEND_LOG_INTERVAL);
     }
