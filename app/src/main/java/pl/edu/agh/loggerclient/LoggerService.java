@@ -182,9 +182,7 @@ public class LoggerService extends IntentService{
     }
 
     private void flushLogToServer() {
-        String fileName = LOGSTASH_FILE;
-        sendLogFile(fileName);
-        deleteFile(fileName);
+        sendLogFile(LOGSTASH_FILE);
     }
 
     /**
@@ -213,6 +211,7 @@ public class LoggerService extends IntentService{
             try {
                 if (br != null) {
                     br.close();
+                    deleteFile(fileName);
                 }
             } catch (IOException e) {
                 Log.d(TAG, "Failed to close BufferedReader:" + e.toString());

@@ -10,51 +10,52 @@
         android:layout_width="371dp"
         android:layout_height="498dp"
         tools:layout_editor_absoluteX="7dp"
-        tools:layout_editor_absoluteY="4dp">
-
-        <Button
-            android:id="@+id/main_button"
-            android:layout_width="300dp"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="213dp"
-            android:text="Start"
-            tools:layout_editor_absoluteX="146dp"
-            tools:layout_editor_absoluteY="310dp"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true" />
+        tools:layout_editor_absoluteY="-64dp">
 
         <TextView
             android:id="@+id/intro"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
+            android:layout_marginBottom="35dp"
             android:gravity="center"
             android:text="Press start to send logs from your mobile to our awesome server!"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:visibility="visible"
-            android:layout_above="@+id/main_button"
+            android:layout_above="@+id/ipTextView"
             android:layout_alignStart="@+id/main_button" />
 
         <EditText
             android:id="@+id/ipEditText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="56dp"
             android:ems="10"
             android:inputType="textPersonName"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
             android:text="0.0.0.0"
-            android:layout_below="@+id/intro"
+            android:layout_centerVertical="true"
             android:layout_alignEnd="@+id/main_button"
-            android:layout_toEndOf="@+id/ipTextView" />
+            android:layout_marginEnd="28dp" />
 
         <TextView
             android:id="@+id/ipTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/ipEditText"
-            android:layout_alignBottom="@+id/ipEditText"
-            android:layout_alignStart="@+id/main_button"
-            android:text="IP" />
+            android:text="IP"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@+id/ipEditText"
+            android:layout_marginEnd="15dp" />
+
+        <Button
+            android:id="@+id/main_button"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:text="Start"
+            tools:layout_editor_absoluteX="146dp"
+            tools:layout_editor_absoluteY="310dp"
+            android:layout_below="@+id/ipEditText"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="17dp" />
 
     </RelativeLayout>
 

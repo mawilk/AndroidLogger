@@ -11,8 +11,6 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -22,7 +20,7 @@ import java.util.TimerTask;
 
 public class ConnectionService extends Service {
 
-    public static final long SEND_LOG_INTERVAL = 20 * 1000;
+    public static final long SEND_LOG_INTERVAL = 30 * 1000;
     public static final String TAG = "ConnectionService";
 
     private final IBinder binder = new ConnectionBinder();
@@ -93,7 +91,7 @@ public class ConnectionService extends Service {
     public void startLogging(Timer timer, String dateString) {
         Log.d(TAG, "Logging started");
 
-        new CollectLogTask(dateString).execute("FunnyLogs");
+        new CollectLogTask(dateString).execute("BatteryService");
 
         timer.scheduleAtFixedRate(new SendLogTask(), SEND_LOG_INTERVAL, SEND_LOG_INTERVAL);
     }

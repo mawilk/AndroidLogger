@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
     public static final String LAST_LOG_DATE_TAG = "LastLogDate";
 
     private ConnectionService connectionService;
-    private LoggerService loggerService;
     private boolean bound = false;
 
     private Button mainBtn;
@@ -58,27 +57,6 @@ public class MainActivity extends AppCompatActivity {
         ipEditText = (EditText) findViewById(R.id.ipEditText);
 
         preferences = getPreferences(MODE_PRIVATE);
-
-        new Timer().scheduleAtFixedRate(new FunnyTimer(), 0, 5 * 1000);
-    }
-
-    private Handler h = new Handler();
-
-    private class FunnyTimer extends TimerTask {
-        private int counter = 0;
-
-        @Override
-        public void run() {
-            h.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (isStarted) {
-                        counter += 1;
-                        Log.d("FunnyLogs", String.valueOf(counter));
-                    }
-                }
-            });
-        }
     }
 
     @Override
