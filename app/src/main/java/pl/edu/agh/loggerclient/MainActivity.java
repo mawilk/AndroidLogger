@@ -9,9 +9,11 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -24,10 +26,13 @@ public class MainActivity extends AppCompatActivity {
     public static final String LAST_LOG_DATE_TAG = "LastLogDate";
 
     private ConnectionService connectionService;
+    private LoggerService loggerService;
     private boolean bound = false;
 
     private Button mainBtn;
     private boolean isStarted = false;
+
+    private EditText ipEditText;
 
     private Timer timer;
 
@@ -49,6 +54,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        ipEditText = (EditText) findViewById(R.id.ipEditText);
 
         preferences = getPreferences(MODE_PRIVATE);
 
@@ -112,6 +119,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void start() {
         isStarted = true;
+        ipEditText.setEnabled(false);
+        ipEditText.setInputType(InputType.TYPE_NULL);
+
         setButtonLabel();
 
         if (timer != null) {
@@ -122,11 +132,15 @@ public class MainActivity extends AppCompatActivity {
 
         String lastLogDate = getLastSavedDateOrDefault();
 
+        LoggerService.setIp(ipEditText.getText().toString());
+
         connectionService.startLogging(timer, lastLogDate);
     }
 
     private void stop() {
         isStarted = false;
+        ipEditText.setEnabled(true);
+        ipEditText.setInputType(InputType.TYPE_CLASS_TEXT);
         setButtonLabel();
 
         if (timer != null) {

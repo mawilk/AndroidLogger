@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.EditText;
 
 import java.io.*;
 import java.net.*;
@@ -29,7 +30,7 @@ public class LoggerService extends IntentService{
     public static final String EXTRA_LOG = "EXTRA_LOG";
     public static final String EXTRA_MODE = "EXTRA_MODE";
 
-    private static final String LOGSTASH_SERVER_URL = "http://XXX.XXX.XXX.XXX"; // SET PROPER URL
+    static String logstashServerUrl = "http://XXX.XXX.XXX.XXX"; // SET PROPER URL
     private static final int LOGSTASH_UDP_JSON_PORT = 5000;
     private static final String LOGSTASH_FILE= "logstash_logs";
 
@@ -121,7 +122,7 @@ public class LoggerService extends IntentService{
         try {
             socket = new DatagramSocket();
             if (socket == null) return;
-            host = InetAddress.getByName(new URL(LOGSTASH_SERVER_URL).getHost());
+            host = InetAddress.getByName(new URL(logstashServerUrl).getHost());
         } catch (SocketException e) {
             Log.d(TAG, "couldn't send log:"+e.toString());
             return;
@@ -217,5 +218,9 @@ public class LoggerService extends IntentService{
                 Log.d(TAG, "Failed to close BufferedReader:" + e.toString());
             }
         }
+    }
+
+    public static void setIp(String ip) {
+        logstashServerUrl = "http://"+ip;
     }
 }

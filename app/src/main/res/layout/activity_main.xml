@@ -10,7 +10,7 @@
         android:layout_width="371dp"
         android:layout_height="498dp"
         tools:layout_editor_absoluteX="7dp"
-        tools:layout_editor_absoluteY="6dp">
+        tools:layout_editor_absoluteY="4dp">
 
         <Button
             android:id="@+id/main_button"
@@ -34,6 +34,27 @@
             android:visibility="visible"
             android:layout_above="@+id/main_button"
             android:layout_alignStart="@+id/main_button" />
+
+        <EditText
+            android:id="@+id/ipEditText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="56dp"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:text="0.0.0.0"
+            android:layout_below="@+id/intro"
+            android:layout_alignEnd="@+id/main_button"
+            android:layout_toEndOf="@+id/ipTextView" />
+
+        <TextView
+            android:id="@+id/ipTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/ipEditText"
+            android:layout_alignBottom="@+id/ipEditText"
+            android:layout_alignStart="@+id/main_button"
+            android:text="IP" />
 
     </RelativeLayout>
 
