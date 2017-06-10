@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.regex.Pattern;
 
 /**
  * Created by Wilk.
@@ -27,6 +29,10 @@ public class ConnectionService extends Service {
     private boolean running = false;
 
     private Handler handler = new Handler();
+
+    Pattern batteryPattern = Pattern.compile("BatteryService: level:");
+    Pattern screenPattern = Pattern.compile("PowerManagerService: ((Going to sleep)|(Waking up))");
+    Pattern connectionPattern = Pattern.compile("ConnectivityService: notifyType CAP_CHANGED for NetworkAgentInfo");
 
     public class ConnectionBinder extends Binder {
         ConnectionService getService() {
@@ -65,7 +71,7 @@ public class ConnectionService extends Service {
             try {
                 Log.d(TAG, "Starting log collection");
 
-                String[] command = new String[]{"logcat", "-T", dateString, "-s", params[0]};
+                String[] command = new String[]{"logcat", "-T", dateString, "-s", TextUtils.join(" ", params)};
 
                 Process process = Runtime.getRuntime().exec(command);
                 BufferedReader bufferedReader = new BufferedReader(
@@ -75,11 +81,12 @@ public class ConnectionService extends Service {
                 running = true;
                 String line = "";
                 while ((line = bufferedReader.readLine()) != null && running) {
-                    Log.d(TAG, line);
-                    LoggerService.addLog(getBaseContext(), line);
+                    if (screenPattern.matcher(line).find() || batteryPattern.matcher(line).find() || connectionPattern.matcher(line).find()) {
+                        Log.d(TAG, line);
+                        LoggerService.addLog(getBaseContext(), line);
+                    }
                 }
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 Log.d(TAG, "Collecting logs failed.");
                 this.cancel(true);
             }
@@ -91,7 +98,7 @@ public class ConnectionService extends Service {
     public void startLogging(Timer timer, String dateString) {
         Log.d(TAG, "Logging started");
 
-        new CollectLogTask(dateString).execute("BatteryService");
+        new CollectLogTask(dateString).execute("BatteryService", "ConnectivityService", "PowerManagerService");
 
         timer.scheduleAtFixedRate(new SendLogTask(), SEND_LOG_INTERVAL, SEND_LOG_INTERVAL);
     }
