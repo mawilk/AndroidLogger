@@ -7,6 +7,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.InputType;
@@ -21,10 +22,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
-
-    public static final String DATE_PATTERN = "MM-dd HH:mm:ss.S";
-    public static final String LAST_LOG_DATE_TAG = "LastLogDate";
-
     private ConnectionService connectionService;
     private boolean bound = false;
 
@@ -56,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
         ipEditText = (EditText) findViewById(R.id.ipEditText);
 
-        preferences = getPreferences(MODE_PRIVATE);
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
     }
 
     @Override
@@ -108,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
 
         timer = new Timer();
 
-        String lastLogDate = getLastSavedDateOrDefault();
+        String lastLogDate = DateHelper.getLastSavedDateOrDefault(preferences);
 
         LoggerService.setIp(ipEditText.getText().toString());
 
@@ -126,35 +123,11 @@ public class MainActivity extends AppCompatActivity {
             timer = null;
         }
 
-        saveCurrentDate();
-
         connectionService.stopLogging();
     }
 
     private void setButtonLabel() {
         mainBtn.setText(getStateLabel());
-    }
-
-    private void saveCurrentDate() {
-        String current = getCurrentStringDate();
-        SharedPreferences.Editor edit = preferences.edit();
-        edit.putString(LAST_LOG_DATE_TAG, current);
-        edit.commit();
-    }
-
-    private String getLastSavedDateOrDefault() {
-        String LastLogDate = preferences.getString(LAST_LOG_DATE_TAG, "");
-
-        if(LastLogDate.isEmpty()) {
-            LastLogDate = getCurrentStringDate();
-        }
-
-        return LastLogDate;
-    }
-
-    private String getCurrentStringDate() {
-        SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
-        return sdf.format(new Date());
     }
 
     private String getStateLabel() {

@@ -3,6 +3,8 @@ package pl.edu.agh.loggerclient;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.EditText;
@@ -205,13 +207,17 @@ public class LoggerService extends IntentService{
             while ((log = br.readLine()) != null) {
                 sendLogToServer(log);
             }
+            deleteFile(fileName);
+
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            DateHelper.saveCurrentDate(preferences);
+
         } catch (IOException e) {
             Log.d(TAG, "couldn't send log to server:" + e.toString());
         } finally {
             try {
                 if (br != null) {
                     br.close();
-                    deleteFile(fileName);
                 }
             } catch (IOException e) {
                 Log.d(TAG, "Failed to close BufferedReader:" + e.toString());
